@@ -7,15 +7,18 @@ import logging
 
 from application.utils import get_logger
 from .parser import loadSheets
-from .common import DevicesList, Command, Devices, SPREADSHEET_SOCKET_PATH
+from .common import BasicComm, DevicesList, Command, Devices, SPREADSHEET_SOCKET_PATH
 
 
 SERVER_SOCKET_TIMEOUT = 5
 
 
-class BackendServer:
-    def __init__(self):
+class InvalidParameter(Exception):
+    pass
 
+
+class BackendServer(BasicComm):
+    def __init__(self):
         self.logger = get_logger("Backend")
         self.logger.setLevel(logging.DEBUG)
         self.run = True
@@ -29,6 +32,19 @@ class BackendServer:
     def start(self):
         self.logger.info("Starting backend server thread.")
         self.thread.start()
+
+    def fromClient(self, conn):
+        payload_bytes = b""
+        payload_length = int.from_bytes(self.recvBytes(conn, 4), "big")
+        payload_bytes = self.recvBytes(conn, payload_length)
+
+        return payload_bytes
+
+    def toClient(self, conn, response):
+        response_length = len(response)
+
+        self.sendBytes(conn, response_length.to_bytes(4, "big"))
+        self.sendBytes(conn, response)
 
     def listen(self):
         if os.path.exists(self.socket_path):
@@ -49,29 +65,21 @@ class BackendServer:
                 with conn:
                     try:
                         conn.setblocking(False)
-
-                        ready = select.select([conn], [], [], self.socket_timeout)
-                        if ready[0]:
-                            payload_length = int.from_bytes(conn.recv(4), "big")
-                            payload_bytes = conn.recv(payload_length)
-
-                        self.logger.debug("Payload length: {}".format(payload_length))
-
+                        payload_bytes = self.fromClient(conn)
                         if payload_bytes != b"":
                             payload = pickle.loads(payload_bytes)
                             response = pickle.dumps(self.handle(payload))
-                            self.logger.debug(
-                                'Sending payload with size {} "{}"'.format(
-                                    len(payload_bytes), payload_length
-                                )
-                            )
-                            conn.sendall(len(response).to_bytes(4, "big"))
-                            conn.sendall(response)
+                            self.toClient(conn, response)
+
+                    except InvalidParameter as e:
+                        self.logger.error('Invalid paylad content. "{}"'.format(e))
+                        self.toClient(conn, pickle.dumps({}))
 
                     except Exception:
                         self.logger.exception(
                             "The connection with the unix socket {} has been closed."
                         )
+                    self.logger.info("Connection with client closed.")
         self.logger.info("Shutting down gracefully.")
 
     def handle(self, payload: dict):
@@ -89,7 +97,7 @@ class BackendServer:
     def getDevice(self, deviceType=None, ip=None, **kwargs):
 
         if deviceType not in DevicesList:
-            raise Exception('Invalid "deviceType".')
+            raise InvalidParameter('Invalid "deviceType".')
 
         if deviceType == Devices.AGILENT.value:
             return self.getAgilent(ip)

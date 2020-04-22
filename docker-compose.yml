@@ -1,0 +1,10 @@
+version: "3.7"
+services:
+    app:
+        image: "lnlscon/utility:v1.0"
+        #command: "/usr/local/bin/mod_wsgi-express start-server wsgi.py --port=80 --user www-data --group www-data --log-to-terminal"
+        build: "."
+        volumes:
+            - "/home/carneirofc/Downloads/Redes e Beaglebones (1).xlsx:/opt/Redes e Beaglebones.xlsx:ro"
+        ports:
+            - 8080:80

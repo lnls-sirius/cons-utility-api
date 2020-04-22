@@ -6,7 +6,6 @@ def create_app():
     app.config.from_object("config.Config")
 
     with app.app_context():
-
         from application.spreadsheet.backend import BackendServer
 
         backendServer = BackendServer()

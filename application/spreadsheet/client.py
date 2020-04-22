@@ -9,9 +9,10 @@ import time
 from application.utils import get_logger
 from .parser import loadSheets
 from .common import (
-    DevicesList,
+    BasicComm,
     Command,
     Devices,
+    DevicesList,
     SPREADSHEET_SOCKET_PATH,
     SPREADSHEET_XLSX_PATH,
 )
@@ -51,13 +52,12 @@ class SyncService:
             time.sleep(5)
 
 
-class BackendClient:
+class BackendClient(BasicComm):
     def __init__(self):
         self.socket_path = SPREADSHEET_SOCKET_PATH
         self.socket_timeout = CLIENT_SOCKET_TIMEOUT
 
         self.logger = get_logger("Client")
-        self.logger.setLevel(logging.DEBUG)
         self.logger.info("BackendClient created")
 
     def sendCommand(self, payload: dict):
@@ -65,34 +65,25 @@ class BackendClient:
             raise Exception('Missing "command"')
 
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-            try:
-                self.logger.debug("Connecting to server ...")
-                s.connect(self.socket_path)
-                payload_bytes = pickle.dumps(payload)
-                payload_length = len(payload_bytes).to_bytes(4, "big")
-                self.logger.debug(
-                    'Sending payload with size {} "{}"'.format(
-                        len(payload_bytes), payload_length
-                    )
-                )
-                s.sendall(payload_length)
-                s.sendall(payload_bytes)
+            s.connect(self.socket_path)
+            payload_bytes = pickle.dumps(payload)
+            payload_length = len(payload_bytes).to_bytes(4, "big")
 
-                ready = select.select([s], [], [], self.socket_timeout)
-                if ready[0]:
-                    response_len = int.from_bytes(s.recv(4), "big")
-                    self.logger.info("Preparing to read {} bytes".format(response_len))
-                    response_bytes = s.recv(response_len)
-                    response = pickle.loads(response_bytes)
-                    return response
-            except Exception:
-                self.logger.exception("Failed to load reponse from backend server")
-        return {}
+            self.sendBytes(s, payload_length)
+            self.sendBytes(s, payload_bytes)
+
+            response_len = int.from_bytes(self.recvBytes(s, 4), "big")
+            response_bytes = self.recvBytes(s, response_len)
+            response = pickle.loads(response_bytes)
+            return response
 
     def reloadData(self):
         return self.sendCommand({"command": Command.RELOAD_DATA})
 
     def getDevice(self, ip, deviceType):
+        if deviceType == None or deviceType not in DevicesList:
+            raise Exception("Invalid device.")
+
         return self.sendCommand(
             {"command": Command.GET_DEVICE, "ip": ip, "deviceType": deviceType}
         )
