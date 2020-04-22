@@ -28,7 +28,7 @@ def normalize(sheet, ch_names: list):
 
             ip_devices.append(data)
             data["enable"] = row["ENABLE"] if type(row["ENABLE"]) is bool else False
-            data["device"] = row["Dispositivo"]
+            data["prefix"] = row["Dispositivo"]
 
             info = {}
             info["sector"] = row["Setor"]
@@ -42,7 +42,7 @@ def normalize(sheet, ch_names: list):
             num = 0
             for ch_name in ch_names:
                 channel = {}
-                channel["name"] = ch_name
+                channel["num"] = num
                 channel["prefix"] = row[ch_name]
 
                 config = {}
@@ -50,7 +50,7 @@ def normalize(sheet, ch_names: list):
                 config["pressure_hihi"] = row["HIHI " + ch_name]
                 channel["config"] = config
 
-                channels[num] = channel
+                channels[ch_name] = channel
                 num += 1
 
             data["channels"] = channels
