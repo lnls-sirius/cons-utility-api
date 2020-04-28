@@ -2,7 +2,7 @@
 from setuptools import setup
 
 requirements = None
-with open("requirements.txt", r) as _f:
+with open("requirements.txt", "r") as _f:
     requirements = _f.readlines()
 
 setup(
