@@ -6,6 +6,10 @@ from .common import SPREADSHEET_XLSX_PATH
 
 logger = get_logger("Parser")
 
+MKS_CONFIG_CC = "ColdCathode"
+MKS_CONFIG_PIRANI = "Pirani"
+MKS_CONFIG_NOT_USED = "NotUsed"
+
 
 def normalizeAgilent(sheet):
     return normalize(sheet, ["C1", "C2", "C3", "C4"])
@@ -34,8 +38,6 @@ def normalize(sheet, ch_names: list):
             info["sector"] = row["Setor"]
             info["serial_id"] = row["RS485 ID"]
             info["rack"] = row["Rack"]
-            info["config"] = row["Configuracao"] if "Configuracao" in row else ""
-
             data["info"] = info
 
             channels = {}
@@ -45,10 +47,12 @@ def normalize(sheet, ch_names: list):
                 channel["num"] = num
                 channel["prefix"] = row[ch_name]
 
-                config = {}
-                config["pressure_hi"] = row["HI " + ch_name]
-                config["pressure_hihi"] = row["HIHI " + ch_name]
-                channel["config"] = config
+                info = {}
+                info["pressure_hi"] = row["HI " + ch_name]
+                info["pressure_hihi"] = row["HIHI " + ch_name]
+                if "Sensor " + ch_name in row:
+                    info["sensor"] = row["Sensor " + ch_name]
+                channel["info"] = info
 
                 channels[ch_name] = channel
                 num += 1
