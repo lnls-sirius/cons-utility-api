@@ -57,11 +57,11 @@ class BackendServer(BasicComm):
             s.listen()
 
             while self.run:
-                self.logger.info(
+                self.logger.debug(
                     'Waiting for a connection at "{}" ...'.format(self.socket_path)
                 )
                 conn, addr = s.accept()
-                self.logger.info("Client connected ...")
+                self.logger.debug("Client connected ...")
                 with conn:
                     try:
                         conn.setblocking(False)
@@ -79,7 +79,7 @@ class BackendServer(BasicComm):
                         self.logger.exception(
                             "The connection with the unix socket {} has been closed."
                         )
-                    self.logger.info("Connection with client closed.")
+                    self.logger.debug("Connection with client closed.")
         self.logger.info("Shutting down gracefully.")
 
     def handle(self, payload: dict):

@@ -58,7 +58,7 @@ class BackendClient(BasicComm):
         self.socket_timeout = CLIENT_SOCKET_TIMEOUT
 
         self.logger = get_logger("Client")
-        self.logger.info("BackendClient created")
+        self.logger.debug("BackendClient created")
 
     def sendCommand(self, payload: dict):
         if "command" not in payload:
