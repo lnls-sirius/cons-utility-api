@@ -7,7 +7,14 @@ import logging
 
 from application.utils import get_logger
 from .parser import loadSheets
-from .common import BasicComm, DevicesList, Command, Devices, SPREADSHEET_SOCKET_PATH
+from .common import (
+    BasicComm,
+    DevicesList,
+    Command,
+    Devices,
+    SPREADSHEET_SOCKET_PATH,
+    SPREADSHEET_XLSX_PATH,
+)
 
 
 SERVER_SOCKET_TIMEOUT = 5
@@ -89,7 +96,7 @@ class BackendServer(BasicComm):
         if command == Command.GET_DEVICE:
             return self.getDevice(**payload)
         elif command == Command.RELOAD_DATA:
-            self.Agilent, self.MKS = loadSheets()
+            self.Agilent, self.MKS = loadSheets(SPREADSHEET_XLSX_PATH)
             return True
 
         return None

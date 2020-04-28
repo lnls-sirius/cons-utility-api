@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+from typing import Tuple
+
 import pandas
+import numpy
 
 from application.utils import get_logger
-from .common import SPREADSHEET_XLSX_PATH
 
 logger = get_logger("Parser")
 
@@ -11,15 +13,15 @@ MKS_CONFIG_PIRANI = "Pirani"
 MKS_CONFIG_NOT_USED = "NotUsed"
 
 
-def normalizeAgilent(sheet):
+def normalizeAgilent(sheet) -> dict:
     return normalize(sheet, ["C1", "C2", "C3", "C4"])
 
 
-def normalizeMKS(sheet):
+def normalizeMKS(sheet) -> dict:
     return normalize(sheet, ["A1", "A2", "B1", "B2", "C1", "C2"])
 
 
-def normalize(sheet, ch_names: list):
+def normalize(sheet, ch_names: list) -> dict:
     """ Create a dictionary with the beaglebone IP as keys.  Aka: {ip:[devices ...] ... ipn:[devicesn ... ]} """
     ips = {}
     try:
@@ -46,6 +48,7 @@ def normalize(sheet, ch_names: list):
                 channel = {}
                 channel["num"] = num
                 channel["prefix"] = row[ch_name]
+                channel["enable"] = row[ch_name] != "" or row[ch_name] is None
 
                 info = {}
                 info["pressure_hi"] = row["HI " + ch_name]
@@ -65,15 +68,15 @@ def normalize(sheet, ch_names: list):
     return ips
 
 
-def loadSheets():
+def loadSheets(spreadsheet_xlsx_path: str) -> Tuple[dict, dict]:
+    """ Tuple of dictionaries. (Agilent, MKS) """
 
-    logger.info('Loading spreadsheet from url "{}".'.format(SPREADSHEET_XLSX_PATH))
-    sheets = pandas.read_excel(SPREADSHEET_XLSX_PATH, sheet_name=None,)
-
+    logger.info('Loading spreadsheet from url "{}".'.format(spreadsheet_xlsx_path))
+    sheets = pandas.read_excel(spreadsheet_xlsx_path, sheet_name=None,)
     for sheetName in sheets:
         if "PVs" in sheetName:
             sheetNameUpper = sheetName.upper()
-            sheet = sheets[sheetName]
+            sheet = sheets[sheetName].replace(numpy.nan, "", regex=True)
 
             if "AGILENT" in sheetNameUpper:
                 Agilent = normalizeAgilent(sheet)
