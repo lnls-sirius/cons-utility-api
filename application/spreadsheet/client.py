@@ -1,17 +1,13 @@
-import logging
 import os
 import pickle
-import select
 import socket
 import threading
 import time
 
 from application.utils import get_logger
-from .parser import loadSheets
 from .common import (
     BasicComm,
     Command,
-    Devices,
     DevicesList,
     SPREADSHEET_SOCKET_PATH,
     SPREADSHEET_XLSX_PATH,
@@ -47,7 +43,7 @@ class SyncService:
                                 SPREADSHEET_XLSX_PATH, self.update_time
                             )
                         )
-                    except:
+                    except Exception:
                         self.logger.exception("Failed to update the spreadsheet.")
             time.sleep(5)
 
@@ -81,7 +77,7 @@ class BackendClient(BasicComm):
         return self.sendCommand({"command": Command.RELOAD_DATA})
 
     def getDevice(self, ip, deviceType):
-        if deviceType == None or deviceType not in DevicesList:
+        if deviceType is None or deviceType not in DevicesList:
             raise Exception("Invalid device.")
 
         return self.sendCommand(

@@ -1,12 +1,10 @@
 import socket
-import select
 import os
 import pickle
 import threading
 import logging
-
+from siriushlacommon.spreadsheet.parser import loadSheets
 from application.utils import get_logger
-from .parser import loadSheets
 from .common import (
     BasicComm,
     DevicesList,
