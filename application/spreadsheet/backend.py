@@ -3,7 +3,11 @@ import os
 import pickle
 import threading
 import logging
-from siriushlacommon.spreadsheet.parser import loadSheets
+from typing import Dict
+
+from conscommon.spreadsheet import SheetName
+from conscommon.spreadsheet.parser import loadSheets
+
 from application.utils import get_logger
 from .common import (
     BasicComm,
@@ -25,14 +29,12 @@ class InvalidParameter(Exception):
 class BackendServer(BasicComm):
     def __init__(self):
         self.logger = get_logger("Backend")
-        self.logger.setLevel(logging.DEBUG)
         self.run = True
         self.socket_path = SPREADSHEET_SOCKET_PATH
         self.socket_timeout = SERVER_SOCKET_TIMEOUT
         self.thread = threading.Thread(target=self.listen, daemon=True)
 
-        self.Agilent = None
-        self.MKS = None
+        self.sheetsData: Dict[SheetName, dict] = {}
 
     def start(self):
         self.logger.info("Starting backend server thread.")
@@ -94,7 +96,7 @@ class BackendServer(BasicComm):
         if command == Command.GET_DEVICE:
             return self.getDevice(**payload)
         elif command == Command.RELOAD_DATA:
-            self.Agilent, self.MKS = loadSheets(SPREADSHEET_XLSX_PATH)
+            self.sheetsData = loadSheets(SPREADSHEET_XLSX_PATH)
             return True
 
         return None
@@ -114,21 +116,7 @@ class BackendServer(BasicComm):
         return {}
 
     def getAgilent(self, ip=None):
-        if not self.Agilent:
-            self.logger.warning("Agilent data not loaded")
-            return {}
-
-        if not ip:
-            return self.Agilent
-        else:
-            return {} if ip not in self.Agilent else {ip: self.Agilent[ip]}
+        return self.sheetsData.get(SheetName.AGILENT, {})
 
     def getMKS(self, ip=None):
-        if not self.MKS:
-            self.logger.warning("MKS data not loaded")
-            return {}
-
-        if not ip:
-            return self.MKS
-        else:
-            return {} if ip not in self.MKS else {ip: self.MKS[ip]}
+        return self.sheetsData.get(SheetName.MKS, {})

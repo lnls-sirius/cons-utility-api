@@ -7,10 +7,11 @@ USER root
 WORKDIR /opt
 RUN apt-get -y update && apt-get install -y apache2 apache2-dev
 
-ADD ./cons-common /opt/cons-common
-RUN cd /opt/cons-common/ && pip install .
 ADD ./requirements.txt /opt/requirements.txt
 RUN pip install -r requirements.txt
+
+ADD ./cons-common /opt/cons-common
+RUN cd /opt/cons-common/ && pip install . && cd test/ && ./test_spreadsheet.py
 
 ADD ./application /opt/application
 ADD ./config.py /opt/config.py
