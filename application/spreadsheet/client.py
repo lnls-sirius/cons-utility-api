@@ -4,13 +4,15 @@ import socket
 import threading
 import time
 
-from application.utils import get_logger
+from conscommon import get_logger
+from conscommon.spreadsheet import SheetName
 from .common import (
     BasicComm,
     Command,
-    DevicesList,
     SPREADSHEET_SOCKET_PATH,
     SPREADSHEET_XLSX_PATH,
+    InvalidDevice,
+    InvalidCommand,
 )
 
 
@@ -58,7 +60,7 @@ class BackendClient(BasicComm):
 
     def sendCommand(self, payload: dict):
         if "command" not in payload:
-            raise Exception('Missing "command"')
+            raise InvalidCommand('Missing "command"')
 
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
             s.connect(self.socket_path)
@@ -77,9 +79,13 @@ class BackendClient(BasicComm):
         return self.sendCommand({"command": Command.RELOAD_DATA})
 
     def getDevice(self, ip, deviceType):
-        if deviceType is None or deviceType not in DevicesList:
-            raise Exception("Invalid device.")
+        if not SheetName.has_key(deviceType):
+            raise InvalidDevice("Invalid device.")
 
         return self.sendCommand(
-            {"command": Command.GET_DEVICE, "ip": ip, "deviceType": deviceType}
+            {
+                "command": Command.GET_DEVICE,
+                "ip": ip,
+                "sheetName": SheetName.from_key(deviceType),
+            }
         )

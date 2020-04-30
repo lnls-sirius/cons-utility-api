@@ -2,18 +2,15 @@ import socket
 import os
 import pickle
 import threading
-import logging
 from typing import Dict
 
+from conscommon import get_logger
 from conscommon.spreadsheet import SheetName
 from conscommon.spreadsheet.parser import loadSheets
 
-from application.utils import get_logger
 from .common import (
     BasicComm,
-    DevicesList,
     Command,
-    Devices,
     SPREADSHEET_SOCKET_PATH,
     SPREADSHEET_XLSX_PATH,
 )
@@ -91,7 +88,7 @@ class BackendServer(BasicComm):
 
     def handle(self, payload: dict):
         command = payload["command"]
-        self.logger.info("Handle: {}".format(command))
+        self.logger.info("Handle: {}".format(payload))
 
         if command == Command.GET_DEVICE:
             return self.getDevice(**payload)
@@ -101,22 +98,5 @@ class BackendServer(BasicComm):
 
         return None
 
-    def getDevice(self, deviceType=None, ip=None, **kwargs):
-
-        if deviceType not in DevicesList:
-            raise InvalidParameter('Invalid "deviceType".')
-
-        if deviceType == Devices.AGILENT.value:
-            return self.getAgilent(ip)
-
-        elif deviceType == Devices.MKS.value:
-            return self.getMKS(ip)
-
-        self.logger.warning('No handler for device type "{}"'.format(deviceType))
-        return {}
-
-    def getAgilent(self, ip=None):
-        return self.sheetsData.get(SheetName.AGILENT, {})
-
-    def getMKS(self, ip=None):
-        return self.sheetsData.get(SheetName.MKS, {})
+    def getDevice(self, sheetName: SheetName = None, **kwargs):
+        return self.sheetsData.get(sheetName, {})

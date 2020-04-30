@@ -1,10 +1,10 @@
-from flask import Blueprint, render_template
-from flask import current_app, request
+from flask import Blueprint
+from flask import request
 
-from .common import Devices, DevicesList
-from .client import BackendClient
+from conscommon import get_logger
+from conscommon.spreadsheet import SheetName
 
-from application.utils import get_logger
+from .client import BackendClient, InvalidDevice, InvalidCommand
 
 # Set up a Blueprint
 spreadsheet_bp = Blueprint(
@@ -23,7 +23,7 @@ def reload():
         return f"Data reloaded succesfully!", 200
 
     except Exception:
-        logger.exceptino("reload entries failed.")
+        logger.exception("reload entries failed.")
         return (
             f"Unable to update entries from spreadsheet.",
             400,
@@ -45,11 +45,17 @@ def devices():
         client = BackendClient()
         response = client.getDevice(deviceType=deviceType, ip=ip)
         return response, 200
+
+    except InvalidDevice:
+        logger.error("Invalid device")
+    except InvalidCommand:
+        logger.error('Invalid "command"')
     except Exception:
-        logger.exception("routes")
-        return (
-            'Invalid response from backend. Available "deviceType" options are "{}".'.format(
-                DevicesList
-            ),
-            422,
-        )
+        logger.exception("Internal exception")
+
+    return (
+        'Invalid response from backend. Available "deviceType" options are "{}".'.format(
+            SheetName.keys()
+        ),
+        422,
+    )

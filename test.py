@@ -2,7 +2,7 @@
 
 import unittest
 
-import conscommon.data_model
+from conscommon.data_model import getDevicesFromBeagles, getBeaglesFromList
 from conscommon.spreadsheet import SheetName
 from conscommon.spreadsheet.parser import loadSheets
 
@@ -18,9 +18,7 @@ class TestParser(unittest.TestCase):
         self.assertGreater(self.data_mks.__len__(), 0)
 
     def checkTypes(self, data: dict):
-        for device in conscommon.data_model.getDevicesFromBeagles(
-            conscommon.data_model.getBeaglesFromList(data)
-        ):
+        for device in getDevicesFromBeagles(getBeaglesFromList(data)):
             self.assertEqual(type(device.prefix), str)
             for channel in device.channels:
                 self.assertEqual(type(channel.prefix), str)

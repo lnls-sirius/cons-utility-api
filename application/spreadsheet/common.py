@@ -1,9 +1,8 @@
-import os
 import select
 from enum import Enum, unique
 
 from flask import current_app
-from application.utils import get_logger
+from conscommon import get_logger
 
 logger = get_logger("Spreadsheet Common")
 
@@ -15,10 +14,12 @@ class Command(Enum):
     SHUTDOWN = 3
 
 
-@unique
-class Devices(Enum):
-    AGILENT = "agilent"
-    MKS = "mks"
+class InvalidCommand(Exception):
+    pass
+
+
+class InvalidDevice(Exception):
+    pass
 
 
 class BasicComm:
@@ -40,13 +41,9 @@ class BasicComm:
             ready = select.select([s], [], [], self.socket_timeout)
             if ready[0]:
                 _bytes += s.recv(LEN - _num)
-                _num += len(_bytes)
+                _num = len(_bytes)
         return _bytes
 
-
-DevicesList = set()
-for device in Devices:
-    DevicesList.add(device.value)
 
 SPREADSHEET_SOCKET_PATH = current_app.config.get("SPREADSHEET_SOCKET_PATH")
 SPREADSHEET_XLSX_PATH = current_app.config.get("SPREADSHEET_XLSX_PATH")
