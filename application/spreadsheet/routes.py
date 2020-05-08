@@ -46,10 +46,8 @@ def devices():
         response = client.getDevice(deviceType=deviceType, ip=ip)
         return response, 200
 
-    except InvalidDevice:
-        logger.error("Invalid device")
-    except InvalidCommand:
-        logger.error('Invalid "command"')
+    except (InvalidDevice, InvalidCommand) as e:
+        logger.error("{}".format(e))
     except Exception:
         logger.exception("Internal exception")
 

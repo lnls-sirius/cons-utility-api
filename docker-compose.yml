@@ -1,7 +1,7 @@
 version: "3.7"
 services:
     app:
-        image: "lnlscon/utility:v1.6"
+        image: "lnlscon/utility:v1.8"
         build: "."
         volumes:
             - "/home/carneirofc/Devel/cons-utility-api/Redes e Beaglebones.xlsx:/opt/spreadsheet/Redes e Beaglebones.xlsx:ro"

@@ -80,7 +80,7 @@ class BackendClient(BasicComm):
 
     def getDevice(self, ip, deviceType):
         if not SheetName.has_key(deviceType):
-            raise InvalidDevice("Invalid device.")
+            raise InvalidDevice('Invalid device "{}".'.format(deviceType))
 
         return self.sendCommand(
             {
