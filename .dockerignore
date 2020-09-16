@@ -1,4 +1,11 @@
+.dockerignore
 .git
 .gitignore
+.gitmodules
 .vscode
+Dockerfile
+README.md
 clean.sh
+docker-compose.yml
+start.sh
+Redes e Beaglebones.xlsx
